@@ -108,10 +108,30 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;
 .nodata-link a{color:#1f6feb;text-decoration:none}
 .nodata-link a:hover{text-decoration:underline}
 
-@media(max-width:740px),(max-width:900px) and (max-height:500px){
+/* @media(max-width:740px),(max-width:900px) and (max-height:500px){
+  .grid{grid-template-columns:1fr}
+  .col{border-right:none;border-bottom:1px solid #21262d}
+} */
+
+/* for 3 colujmns in mobile landscape mode */
+@media(max-width:740px) and (orientation:portrait){
   .grid{grid-template-columns:1fr}
   .col{border-right:none;border-bottom:1px solid #21262d}
 }
+
+@media(orientation:landscape) and (max-height:500px){
+  .top-row{padding:.3rem .8rem}
+  .tab-row{padding:.2rem .8rem;gap:.25rem}
+  .site-title small{display:none}
+  .tab,.theme-btn,.jump-btn{padding:.15rem .5rem;font-size:.7rem}
+  .col-head{padding:.3rem .4rem;font-size:.78rem}
+  .s-hd{padding:.3rem .45rem}
+  .s-ti{font-size:.72rem}
+  .s-tm,.s-rm{font-size:.62rem}
+  .talk{padding:.18rem .45rem;font-size:.67rem}
+  .talk-t{font-size:.62rem}
+}
+
 
 @media (max-height: 500px) and (orientation: landscape) {
   .top-row {
