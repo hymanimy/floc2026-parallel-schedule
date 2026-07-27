@@ -30,6 +30,11 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;
           border:1px solid #21880050;background:transparent;color:#3fb950;
           cursor:pointer;font-size:.75rem;font-family:inherit}
 .jump-btn:hover{background:#0d2416;border-color:#3fb950}
+.theme-btn{padding:.28rem .8rem;border-radius:5px;
+           border:1px solid #30363d50;background:transparent;color:#8b949e;
+           cursor:pointer;font-size:.75rem;font-family:inherit}
+.theme-btn:hover{background:#21262d;color:#c9d1d9}
+
 
 /* ── Three columns ─────────────────────────────────────────────────── */
 .grid{display:grid;grid-template-columns:1fr 1fr 1fr}
@@ -108,7 +113,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;
   .col{border-right:none;border-bottom:1px solid #21262d}
 }
 
-/* html[data-theme="light"] body{background:#f6f8fa;color:#24292f}
+html[data-theme="light"] body{background:#f6f8fa;color:#24292f}
 html[data-theme="light"] .banner{background:#fff;border-color:#d0d7de}
 html[data-theme="light"] .site-title{color:#1f2328}
 html[data-theme="light"] .site-title small{color:#57606a}
@@ -156,7 +161,7 @@ html[data-theme="light"] .sn{background:#f6f8fa;border-color:#d0d7de}
 html[data-theme="light"] .sn .s-ti{color:#8c959f}
 html[data-theme="light"] .sn .s-tm{color:#eaeef2}
 html[data-theme="light"] .s.past{opacity:.35}
-html[data-theme="light"] .nodata-link a{color:#218bff} */
+html[data-theme="light"] .nodata-link a{color:#218bff}
 
 
 
@@ -177,6 +182,7 @@ html[data-theme="light"] .nodata-link a{color:#218bff} */
     <button class="tab" data-d="1" onclick="setDay(1)">Mon 27 Jul</button>
     <button class="tab" data-d="2" onclick="setDay(2)">Tue 28 Jul</button>
     <button class="tab" data-d="3" onclick="setDay(3)">Wed 29 Jul</button>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀ Light</button> 
     <button class="jump-btn" onclick="jumpNow()">▶ Now</button>
   </div>
 </div>
@@ -520,6 +526,26 @@ function jumpNow(){
     if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
   },60);
 }
+
+function toggleTheme(){
+  const light = document.documentElement.dataset.theme !== 'light';
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  document.getElementById('theme-btn').textContent = light ? '🌙 Dark' : '☀ Light';
+  localStorage.setItem('floc-theme', document.documentElement.dataset.theme);
+}
+// Restore saved theme
+(function(){
+  const t = localStorage.getItem('floc-theme');
+  if(t){ 
+    document.documentElement.dataset.theme = t;
+    // button text is set during render() boot, patch it here
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('theme-btn');
+      if(btn) btn.textContent = t === 'light' ? '🌙 Dark' : '☀ Light';
+    });
+  }
+})();
+
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 const bootDay = dayIdx(lisbonNow());
