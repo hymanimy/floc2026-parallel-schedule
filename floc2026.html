@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLoC 2026 — ITP · CAV · IJCAR</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;
+     color:#c9d1d9;font-size:13px;line-height:1.4}
+
+/* ── Sticky banner ─────────────────────────────────────────────────── */
+.banner{position:sticky;top:0;z-index:100;background:#161b22;
+        border-bottom:1px solid #30363d}
+.top-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+         padding:.6rem 1.2rem}
+.site-title{font-size:1rem;font-weight:700;color:#e6edf3;flex:1}
+.site-title small{color:#6e7681;font-weight:400;font-size:.78rem}
+.clock{font-family:monospace;font-size:.8rem;color:#8b949e;white-space:nowrap}
+.clock b{color:#e6edf3}
+.tab-row{display:flex;gap:.4rem;flex-wrap:wrap;padding:.45rem 1.2rem;
+         border-top:1px solid #21262d;align-items:center}
+.tab{padding:.28rem .8rem;border-radius:5px;border:1px solid #30363d;
+     background:transparent;color:#8b949e;cursor:pointer;
+     font-size:.75rem;font-family:inherit;
+     transition:background .12s,color .12s,border-color .12s}
+.tab:hover{background:#21262d;color:#c9d1d9}
+.tab.on{background:#1c3050;border-color:#1f6feb;color:#58a6ff;font-weight:600}
+.jump-btn{margin-left:auto;padding:.28rem .8rem;border-radius:5px;
+          border:1px solid #21880050;background:transparent;color:#3fb950;
+          cursor:pointer;font-size:.75rem;font-family:inherit}
+.jump-btn:hover{background:#0d2416;border-color:#3fb950}
+
+/* ── Three columns ─────────────────────────────────────────────────── */
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr}
+.col{border-right:1px solid #21262d}
+.col:last-child{border-right:none}
+.col-head{padding:.55rem 1rem;text-align:center;font-weight:700;
+          font-size:.9rem;letter-spacing:.04em;border-bottom:2px solid;
+          position:sticky;z-index:50}
+.ci .col-head{color:#58a6ff;border-color:#1f6feb;background:#0d1117}
+.cc .col-head{color:#ffa657;border-color:#bd561d;background:#0d1117}
+.cj .col-head{color:#56d364;border-color:#238636;background:#0d1117}
+.col-body{padding:.4rem}
+
+/* ── Session cards ─────────────────────────────────────────────────── */
+.s{border-radius:5px;border:1px solid transparent;margin-bottom:.35rem;
+   overflow:hidden;transition:opacity .25s,border-color .25s,box-shadow .25s}
+.s-hd{padding:.5rem .65rem}
+.s-tm{font-family:monospace;font-size:.67rem;color:#484f58;margin-bottom:.12rem}
+.s-ti{font-weight:600;font-size:.79rem;color:#c9d1d9;line-height:1.3}
+.s-rm{font-size:.67rem;color:#484f58;margin-top:.15rem}
+.s-talks{border-top:1px solid rgba(255,255,255,.05)}
+.talk{padding:.3rem .65rem;border-bottom:1px solid rgba(255,255,255,.04);
+      font-size:.72rem;color:#8b949e;line-height:1.3}
+.talk:last-child{border-bottom:none}
+.talk-t{font-family:monospace;font-size:.67rem;color:#484f58;margin-right:.3rem}
+
+/* type colours */
+.sk{background:#160e2a;border-color:#6e40c9}
+.sk .s-ti{color:#d2a8ff}
+.sk .s-tm{color:#9a6ee8}
+
+.si{background:#0b1c34;border-color:#155da4}
+.si .s-ti{color:#79c0ff}
+.si .s-tm{color:#4184c4}
+
+.sp{background:#0d1117;border-color:#21262d}
+.sp .s-ti{color:#c9d1d9}
+
+.sb{background:#0b0d10;border-color:#161b22}
+.sb .s-ti{color:#3d4249;font-weight:400}
+.sb .s-tm{color:#21262d}
+
+.ss{background:#0d1f18;border-color:#1a4428}
+.ss .s-ti{color:#56d364}
+.ss .s-tm{color:#3fb950}
+
+.sa{background:#1a1400;border-color:#7d5a00}
+.sa .s-ti{color:#e3b341}
+.sa .s-tm{color:#b08800}
+
+.sx{background:#1a0f00;border-color:#6a3700}
+.sx .s-ti{color:#ffa657;font-style:italic}
+
+.sn{background:#0b0d10;border-color:#1a1f2a;opacity:.6}
+.sn .s-ti{color:#3d4249;font-style:italic}
+.sn .s-tm{color:#21262d}
+
+/* states */
+.s.past{opacity:.28}
+.s.past.sb{opacity:.12}
+.s.now{opacity:1!important;border-color:#d29922!important;
+        box-shadow:0 0 0 1px #d2992230,0 2px 12px #d2992215}
+.s.now .s-tm{color:#d29922!important}
+
+.pill{display:inline-block;background:#d29922;color:#0d1117;
+      font-size:.58rem;font-weight:800;padding:.05rem .28rem;
+      border-radius:3px;margin-left:.35rem;vertical-align:middle;
+      letter-spacing:.06em}
+
+.nodata-link{padding:.3rem .65rem .45rem;font-size:.7rem}
+.nodata-link a{color:#1f6feb;text-decoration:none}
+.nodata-link a:hover{text-decoration:underline}
+
+@media(max-width:740px){
+  .grid{grid-template-columns:1fr}
+  .col{border-right:none;border-bottom:1px solid #21262d}
+}
+
+/* html[data-theme="light"] body{background:#f6f8fa;color:#24292f}
+html[data-theme="light"] .banner{background:#fff;border-color:#d0d7de}
+html[data-theme="light"] .site-title{color:#1f2328}
+html[data-theme="light"] .site-title small{color:#57606a}
+html[data-theme="light"] .clock{color:#57606a}
+html[data-theme="light"] .clock b{color:#1f2328}
+html[data-theme="light"] .tab-row{border-color:#eaeef2}
+html[data-theme="light"] .tab{border-color:#d0d7de;color:#57606a}
+html[data-theme="light"] .tab:hover{background:#f3f4f6;color:#24292f}
+html[data-theme="light"] .tab.on{background:#ddf4ff;border-color:#218bff;color:#0550ae}
+html[data-theme="light"] .jump-btn{color:#1a7f37;border-color:#2da44e50}
+html[data-theme="light"] .jump-btn:hover{background:#dcffe4;border-color:#2da44e}
+html[data-theme="light"] .theme-btn{color:#57606a;border-color:#d0d7de50}
+html[data-theme="light"] .theme-btn:hover{background:#f3f4f6;border-color:#d0d7de}
+html[data-theme="light"] .col{border-color:#d0d7de}
+html[data-theme="light"] .ci .col-head{color:#0550ae;border-color:#218bff;background:#f6f8fa}
+html[data-theme="light"] .cc .col-head{color:#953800;border-color:#bc4c00;background:#f6f8fa}
+html[data-theme="light"] .cj .col-head{color:#1a7f37;border-color:#2da44e;background:#f6f8fa}
+html[data-theme="light"] .s-talks{border-color:rgba(0,0,0,.08)}
+html[data-theme="light"] .talk{border-color:rgba(0,0,0,.05);color:#57606a}
+html[data-theme="light"] .talk-t{color:#8c959f}
+html[data-theme="light"] .s-tm{color:#8c959f}
+html[data-theme="light"] .s-rm{color:#8c959f}
+html[data-theme="light"] .hr-line{border-color:#d0d7de}
+html[data-theme="light"] .hr-label{color:#b1bac4}
+html[data-theme="light"] .sk{background:#fbefff;border-color:#8250df}
+html[data-theme="light"] .sk .s-ti{color:#5a3ea0}
+html[data-theme="light"] .sk .s-tm{color:#7c5dc0}
+html[data-theme="light"] .si{background:#ddf4ff;border-color:#218bff}
+html[data-theme="light"] .si .s-ti{color:#0550ae}
+html[data-theme="light"] .si .s-tm{color:#2368d1}
+html[data-theme="light"] .sp{background:#fff;border-color:#d0d7de}
+html[data-theme="light"] .sp .s-ti{color:#24292f}
+html[data-theme="light"] .sb{background:#f6f8fa;border-color:#eaeef2}
+html[data-theme="light"] .sb .s-ti{color:#8c959f}
+html[data-theme="light"] .sb .s-tm{color:#d0d7de}
+html[data-theme="light"] .ss{background:#dcffe4;border-color:#56d363}
+html[data-theme="light"] .ss .s-ti{color:#1a7f37}
+html[data-theme="light"] .ss .s-tm{color:#2da44e}
+html[data-theme="light"] .sa{background:#fff8c5;border-color:#d4a72c}
+html[data-theme="light"] .sa .s-ti{color:#7d4e00}
+html[data-theme="light"] .sa .s-tm{color:#9a6700}
+html[data-theme="light"] .sx{background:#fff3da;border-color:#fb8f44}
+html[data-theme="light"] .sx .s-ti{color:#953800}
+html[data-theme="light"] .sn{background:#f6f8fa;border-color:#d0d7de}
+html[data-theme="light"] .sn .s-ti{color:#8c959f}
+html[data-theme="light"] .sn .s-tm{color:#eaeef2}
+html[data-theme="light"] .s.past{opacity:.35}
+html[data-theme="light"] .nodata-link a{color:#218bff} */
+
+
+
+</style>
+</head>
+<body>
+
+<div class="banner" id="banner">
+  <div class="top-row">
+    <div class="site-title">
+      FLoC 2026 — Schedule Viewer
+      <small>&nbsp;/&nbsp;ITP · CAV · IJCAR &nbsp;·&nbsp; Lisbon, Portugal</small>
+    </div>
+    <div class="clock">Lisbon:&nbsp;<b id="clk">--:--</b></div>
+  </div>
+  <div class="tab-row">
+    <button class="tab" data-d="0" onclick="setDay(0)">Sun 26 Jul</button>
+    <button class="tab" data-d="1" onclick="setDay(1)">Mon 27 Jul</button>
+    <button class="tab" data-d="2" onclick="setDay(2)">Tue 28 Jul</button>
+    <button class="tab" data-d="3" onclick="setDay(3)">Wed 29 Jul</button>
+    <button class="jump-btn" onclick="jumpNow()">▶ Now</button>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="col ci">
+    <div class="col-head">ITP</div>
+    <div class="col-body" id="b-itp"></div>
+  </div>
+  <div class="col cc">
+    <div class="col-head">CAV</div>
+    <div class="col-body" id="b-cav"></div>
+  </div>
+  <div class="col cj">
+    <div class="col-head">IJCAR</div>
+    <div class="col-body" id="b-ijcar"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+//  Helpers to build data compactly
+//  S(start, end, cssClass, title, room, talks)
+//  cssClass: sk=keynote  si=invited  sp=papers  sb=break
+//            ss=social   sa=awards   sx=special  sn=no-data
+// ─────────────────────────────────────────────────────────────────────────────
+const H = (h,m)=>[h,m];
+const S = (s,e,c,ti,rm,talks=[])=>({s,e,c,ti,rm,talks});
+const T = (t,n)=>({t,n});
+
+// Conference calendar: [year, month (1-based), day]
+const DATES = [[2026,7,26],[2026,7,27],[2026,7,28],[2026,7,29]];
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  SCHEDULE DATA
+// ─────────────────────────────────────────────────────────────────────────────
+const DATA = {
+
+// ══════════════════════════════════════════════════════════════════════ ITP ══
+itp:[
+/* 0 Sun 26 */[
+  S(H(8,45),H(10,0),'sk','Keynote: The Lean Theorem Prover — Design, Evolution, and Impact','Grande Auditório',[
+    T('08:45–10:00','Leonardo de Moura (Microsoft Research)')]),
+  S(H(10,0),H(11,0),'sb','Coffee Break','B1.04'),
+  S(H(11,0),H(12,0),'sp','Formalisation of Mathematics','B1.04',[
+    T('11:00–11:30','Complex Bounded Operators in Isabelle/HOL'),
+    T('11:30–12:00','Lean Formalization of Generalization Error Bound')]),
+  S(H(12,0),H(14,0),'sb','Lunch','B1.04'),
+  S(H(14,0),H(15,30),'sp','Formalisation of Algorithms','B1.04',[
+    T('14:00–14:30','Certified Intersection of Commutative Regular Expressions'),
+    T('14:30–15:00','Verified Functional Data Structures'),
+    T('15:00–15:30','Verification of the Garsia–Wachs Algorithm')]),
+  S(H(15,30),H(16,30),'sb','Coffee Break','B1.04'),
+  S(H(16,30),H(18,0),'sp','Program Logics','B1.04',[
+    T('16:30–17:00','Fractional Separation Logic in Isabelle/LLVM'),
+    T('17:00–17:30','Lazy Proof Automation for Separation Logic'),
+    T('17:30–18:00','Formalizing a Hoare Calculus for Choreographic Programming')]),
+  S(H(18,0),H(20,0),'ss','Welcome Reception','Pátio da Galé'),
+],
+/* 1 Mon 27 */[
+  S(H(9,0),H(10,0),'si','Invited Talk: Formally Verifying a Production Hypervisor','B1.04',[
+    T('09:00–10:00','Dominic Mulligan (Amazon Web Services) — AWS Nitro Isolation Engine')]),
+  S(H(10,0),H(11,0),'sb','Coffee Break','B1.04'),
+  S(H(11,0),H(12,0),'sp','Verification and Model Checking','B1.04',[
+    T('11:00–11:30','Automated Verification of Robot Software Models'),
+    T('11:30–12:00','Formally Verified Liveness with Multiparty Session Types in Rocq')]),
+  S(H(12,0),H(14,0),'sb','Lunch','B1.04'),
+  S(H(14,0),H(15,30),'sp','AI and ITP','B1.04',[
+    T('14:00–14:30','Multilingual Proof Synthesis with Large Language Models'),
+    T('14:30–15:00','Feedback & Synthesis in LLM-Assisted Termination Proofs'),
+    T('15:00–15:30','LeanArchitect: Automating Blueprint Generation for Humans and AI')]),
+  S(H(15,30),H(16,30),'sb','Coffee Break','B1.04'),
+  S(H(16,30),H(18,0),'sp','Formalisation of Mathematics & AI','B1.04',[
+    T('16:30–17:00','Formalizing the Bruck-Ryser-Chowla Theorem in Lean'),
+    T('17:00–17:20',"Three Roads to de Finetti's Theorem in Lean (Short)"),
+    T('17:20–17:40','Formal Primal-Dual Algorithm Analysis (Short)'),
+    T('17:40–18:00','130k Lines of Formal Topology in Two Weeks (Short)')]),
+  S(H(18,0),H(19,0),'ss','Business Meeting: Future of ITP & Generative AI','B1.04'),
+  S(H(19,30),H(20,30),'ss','AI for Math Happy Hour','Lago Lisboa'),
+],
+/* 2 Tue 28 */[
+  S(H(8,45),H(10,0),'sk','Keynote: Trustworthy Neuro-Symbolic Programming with Informal Specifications','Grande Auditório',[
+    T('08:45–10:00','Işıl Dillig (UT Austin)')]),
+  S(H(10,0),H(11,0),'sb','Coffee Break','B1.04'),
+  S(H(11,0),H(12,0),'sp','Proof Theory and Types','B1.04',[
+    T('11:00–11:30',"Don't Sweat Interaction Trees: Proof-Guided Local Variable Lifting"),
+    T('11:30–12:00','Bidirectional Interpolation for the Lambda-Calculus — Revisiting and Formalising Craig-Čubrić Interpolation')]),
+  S(H(12,0),H(14,0),'sb','Lunch','B1.04'),
+  S(H(14,0),H(15,30),'sp','User Interfaces and Compilers','B1.04',[
+    T('14:00–14:30','Enhancing Interactive Theorem Prover Error Messages with Hints'),
+    T('14:30–15:00','Formalization of a Realistic Verification-Condition Generator for an Intermediate Verification Language'),
+    T('15:00–15:30','Panbench: A Comparative Benchmarking Tool for Dependently-Typed Languages')]),
+  S(H(15,30),H(16,30),'sb','Coffee Break','B1.04'),
+  S(H(16,30),H(18,0),'sp','Automation and Tactics','B1.04',[
+    T('16:30–16:50','A Lean Tactic for Normalizing Expressions in an Algebra over a Ring (Short)'),
+    T('16:50–17:10','Lean on Vampire Proofs (Short)'),
+    T('17:10–17:40','TableauxRocq: A Deep Embedding of Free-Variable Tableaux in Rocq'),
+    T('17:40–18:00',"Faster Verified Real Root Isolation with Descartes' Rule of Signs (Short)")]),
+  S(H(19,0),H(23,0),'ss','Conference Banquet','Pavilhão Carlos Lopes'),
+],
+/* 3 Wed 29 */[
+  S(H(9,0),H(10,0),'si','Invited Talk: Dominique Unruh (RWTH Aachen & University of Tartu)','B1.04',[
+    T('09:00–10:00','Dominique Unruh')]),
+  S(H(10,0),H(11,0),'sb','Coffee Break','B1.04'),
+  S(H(11,0),H(12,0),'sp','Automata and Coinduction','B1.04',[
+    T('11:00–11:30','Completing Almost Fair Simulations'),
+    T('11:30–12:00','Certified Infinite Descent Criteria in Isabelle/HOL')]),
+  S(H(12,0),H(14,0),'sb','Lunch','B1.04'),
+  S(H(14,0),H(15,30),'sp','Formalisation of Mathematics III','B1.04',[
+    T('14:00–14:30','Formalizing Abstract Simplicial Complexes & Stellar Subdivisions in Lean'),
+    T('14:30–15:00','From Weierstraß to Dedekind: Formalising Foundations of Modular Forms'),
+    T('15:00–15:30',"An End-to-End Verification of Keller's Conjecture")]),
+  S(H(15,30),H(16,30),'sb','Coffee Break','B1.04'),
+  S(H(16,30),H(18,0),'sp','Probability, Proof Assistants & Category Theory','B1.04',[
+    T('16:30–17:00','Securing the Foundations of an Intermediate Language for Probabilistic Program Verification'),
+    T('17:00–17:30','Apply2Isar: Automatically Converting Isabelle/HOL Apply-Style Proofs to Structured Isar'),
+    T('17:30–18:00','String Diagrams for Monoidal Categories, in Rocq')]),
+],
+], // end itp
+
+// ══════════════════════════════════════════════════════════════════════ CAV ══
+cav:[ /* 0 Sun 26 */[ S(H(8,45),H(10,0),'sk','Keynote: The Lean Theorem Prover — Design, Evolution, and Impact','Grande Auditório',[ 
+    T('08:45–10:00','Leonardo de Moura (Microsoft Research)')]), 
+    S(H(10,0),H(10,30),'sb','Coffee Break','Grande Auditório'), 
+    S(H(10,30),H(12,35),'sp','Verification of Parallel, Concurrent, and Distributed Systems','Grande Auditório',[ 
+        T('10:30–10:45','On the Complexity of Checking Soundness of Natural Reductions'), 
+        T('10:45–11:00','Deadlock Verification via Ordering-Constrained Mutex Modeling'), T('11:00–11:15','Complete Local Reasoning About Parameterized Programs Over Topologies (Distinguished)'), T('11:15–11:30','Scalable Deductive Verification of Data-Level Parallel Programs'), T('11:30–11:45','On the Verification Problem of Remote Direct Memory Access Programs'), T('11:45–11:55','Model Checking for Flexible Network Protocols'), T('11:55–12:05','The TLA+ Model Checker Apalache'), T('12:05–12:15','PSF: A Generic and Extensible Framework for Protocol State Fuzzing'), T('12:15–12:25','Kofola 1.0: A Modular Approach to ω-Regular Complementation and Inclusion Checking'), T('12:25–12:35','Octopus: Practical Equivalence Checking of P4 Packet Parsers')]), S(H(12,35),H(14,0),'sb','Lunch','Grande Auditório'), S(H(14,0),H(15,30),'sp','Synthesis','Grande Auditório',[ T('14:00–14:15','Randomise Alone, Reach Together'), T('14:15–14:30','Decoupled Planning for Multiple Omega-Regular Objectives'), T('14:30–14:45','Repairing Regex-Dependent String-Manipulation Programs'), T('14:45–15:00','Liquid Tree Automata'), T('15:00–15:10','SemML 2.0: Synthesizing Controllers from LTL'), T('15:10–15:20','Fast Obligation Translation and Synthesis (Distinguished)'), T('15:20–15:30','sweap: Reactive Synthesis for Infinite-State Integer Problems')]), S(H(15,30),H(16,0),'sb','Coffee Break','Grande Auditório'), S(H(16,0),H(17,0),'sp','Hardware Verification','Grande Auditório',[ T('16:00–16:15','A-IC3: Learning-Guided Adaptive Inductive Generalization for Hardware Model Checking'), T('16:15–16:30','A Multi-Width Parametric Equivalence Solver'), T('16:30–16:45','Massively Parallel Mining of Specifications for Hardware Designs'), T('16:45–17:00','A Mechanised, Bidirectional Type System for Bit-Width Determination in SystemVerilog')]), S(H(18,0),H(20,0),'ss','Welcome Reception','Pátio da Galé'), ], /* 1 Mon 27 */[ S(H(9,0),H(10,0),'si','Invited Talk: Deriving Test Oracles for Verification Infrastructure','Grande Auditório',[ T('09:00–10:00','Maria Christakis (TU Wien)')]), S(H(10,0),H(10,30),'sb','Coffee Break','Grande Auditório'), S(H(10,30),H(11,20),'sp','Security, Privacy and Hyperproperties','Grande Auditório',[ T('10:30–10:45','Differentially Private Runtime Monitoring'), T('10:45–11:00','HyperLasso: Bounded Model Checking of ∀+∃+-Liveness Hyperproperties'), T('11:00–11:10','The Simulator\'s Blueprint: Automata Learning from Cybersecurity Logs'), T('11:10–11:20','HyperQB 2.0: A Bounded Model Checker for Hyperproperties')]), S(H(11,20),H(12,30),'sp','SMT, SAT & Decision Procedures','Grande Auditório',[ T('11:20–11:35','Improving Stability of SMT Solvers via Context-Driven Normalization'), T('11:35–11:50','Satisfiability Modulo Extensional Constant Arrays (Distinguished)'), T('11:50–12:05','String Solving with Stabilization and Transducers'), T('12:05–12:20','Lagrangian-Based Duality for Quantified SMT Algorithms'), T('12:20–12:30','Mallob: Scalable Automated Reasoning On Demand (Distinguished)')]), S(H(12,30),H(14,0),'sb','Lunch','Grande Auditório'), S(H(14,0),H(15,30),'sp','Deductive Verification & Certified Verification','Grande Auditório',[ T('14:00–14:15','Modular Reasoning about Object Relations (Distinguished)'), T('14:15–14:30','Formally Verified Linear-Time Invertible Lexing'), T('14:30–14:45','Automating Bitvector and Finite Field Equivalence Proofs in Lean'), T('14:45–15:00','The Cooperating Proof Calculus: Comprehensive Proofs for an SMT Solver'), T('15:00–15:10','Burrow: A Proof Framework for Weak Memory'), T('15:10–15:20','Velvet: A Foundational Multi-Modal Verifier for Imperative Programs in Lean (Distinguished)'), T('15:20–15:30','Automatic Heap-Memory Diagrams for Separation-Logic Proofs')]), S(H(15,30),H(16,0),'sb','Coffee Break','Grande Auditório'), S(H(16,0),H(17,50),'sp','Automata','Grande Auditório',[ T('16:00–16:15','An L# Based Algorithm for Active Learning of Minimal Separating Automata'), T('16:15–16:30','Upper Bound for the Determinization of Emerson-Lei Automata: A One-Fin Approach'), T('16:30–16:45','SMT-Based Active Learning of Weighted Automata'), T('16:45–17:00','Compositional Verification of Timed Automata via Violation Assumptions'), T('17:00–17:15','Weighted Soundness for Workflow Nets'), T('17:15–17:30','Synthesizing POMDP Policies: Sampling Meets Model-checking via Learning'), T('17:30–17:40','TACO: A Toolsuite for the Verification of Threshold Automata'), T('17:40–17:50','Extending QuAK with Nested Quantitative Automata')]), S(H(18,0),H(19,0),'sx','Logic Lounge: Proof Against Attack: Can AI Help Build Software We Can Trust?','Grande Auditório',[ T('18:00–19:00','Kathleen Fisher (Advanced Research and Invention Agency)')]), ], /* 2 Tue 28 */[ S(H(8,45),H(10,0),'sk','Keynote: Trustworthy Neuro-Symbolic Programming with Informal Specifications','Grande Auditório',[ T('08:45–10:00','Işıl Dillig (UT Austin)')]), S(H(10,0),H(10,30),'sb','Coffee Break','Grande Auditório'), S(H(10,30),H(12,25),'sp','Machine Learning, AI and Verification','Grande Auditório',[ T('10:30–10:45','VNN-LIB 2.0: Rigorous Foundations for Neural Network Verification'), T('10:45–11:00','QAV-FT: Quadratic Approximation-based Neural Network Verification via Fourier Series and Taylor Truncation'), T('11:00–11:15','The Rocq-NN-Roll Prover: Soundly Verifying Hyperproperties of Neural Networks in Rocq'), T('11:15–11:30','ATKVerifier: Adaptive Top-K Constraints for Tighter Verification of Semantic Segmentation Networks'), T('11:30–11:45','Precise Verification of Transformers through ReLU-Catalyzed Abstraction Refinement'), T('11:45–12:00','Quantifying Sensitivity for Tree Ensembles: A Symbolic and Compositional Approach'), T('12:00–12:15','Shields to Guarantee Probabilistic Safety in MDPs'), T('12:15–12:25','A Neurosymbolic Approach to Natural Language Formalization and Verification')]), S(H(12,25),H(13,45),'sb','Lunch','Grande Auditório'), S(H(13,45),H(14,45),'sa','CAV Award Ceremony','Grande Auditório',[ T('13:45–14:45','Invited talk by CAV Award awardees (TBA)')]), S(H(14,50),H(15,30),'sp','Liveness / Termination','Grande Auditório',[ T('14:50–15:05','Liveness Proofs for Hardware Model Checking (Distinguished)'), T('15:05–15:20','Transition Invariants Revisited: Termination Witnesses and Their Validation'), T('15:20–15:30','KoAT: Automatic Complexity and Termination Analysis of Integer Programs')]), S(H(15,30),H(16,0),'sb','Coffee Break','Grande Auditório'), S(H(16,0),H(17,25),'sp','Program Analysis','Grande Auditório',[ T('16:00–16:15','Sound and Precise Symbolic Automata Model for Stateful Software Systems'), T('16:15–16:30','Automated Amortised Analysis of Skew Heaps and Leftist Heaps'), T('16:30–16:45','Polynomial Invariant Generation for Floating-Point Programs'), T('16:45–17:00','Parallel Abstract Interpretation for Polynomial Programs with Range Bound Assertions'), T('17:00–17:15','Incremental Inference for Probabilistic Datalog'), T('17:15–17:25','Automatic Detection of Reference Counting Bugs in Linux Kernel Drivers (Distinguished)')]), S(H(17,30),H(18,0),'sx','CAV Business Meeting','Grande Auditório'), S(H(19,0),H(23,0),'ss','Conference Banquet','Pavilhão Carlos Lopes'), ], /* 3 Wed 29 */[ S(H(9,0),H(10,0),'si','Invited Talk: Formally Explaining Neural Networks','Grande Auditório',[ T('09:00–10:00','Guy Katz (Hebrew University of Jerusalem)')]), S(H(10,0),H(10,30),'sb','Coffee Break','Grande Auditório'), S(H(10,30),H(11,15),'sp','Software: Tools, Verification and Synthesis','Grande Auditório',[ T('10:30–10:45','Consistency-Based Software Diagnosis: Accuracy, Scalability, and Limitations'), T('10:45–10:55','Show Me The Money: An Exercise in Proof-Driven Software Understanding'), T('10:55–11:05','SvLibChecker: A Light-Weight Tool for Software Model Checking'), T('11:05–11:15','PyCHC: A Framework for Certified Horn Solving and CHC-based Design')]), S(H(11,15),H(12,35),'sp','Quantum','Grande Auditório',[ T('11:15–11:30','How Many Circuit Identities Are Needed to Generate All Others?'), T('11:30–11:45','A Practical Specification Language for Automatic Quantum Program Verification'), T('11:45–12:00','Formal Verification of Quantum Ancilla Safety'), T('12:00–12:15','Model Checking Matrix Product States Against Linear Chain Logic'), T('12:15–12:25','Analysis and Verification of Quantum Communication Protocols in UPPAAL'), T('12:25–12:35','Quokka#: Quantum Computing with #SAT')]), S(H(12,35),H(14,0),'sb','Lunch','Grande Auditório'), S(H(14,0),H(16,0),'sp','Hybrids, Controls and Probabilistic Systems','Grande Auditório',[ T('14:00–14:15','Over-Approximation of Weakly-Hard Constraints for Control Systems Verification'), T('14:15–14:30','Spatiotemporal Robustness of Temporal Logic Tasks Using Multi-Objective Reasoning'), T('14:30–14:45','Best-Effort Safety Control of Multi-Mode Systems'), T('14:45–15:00','Perception with Guarantees: Certified Pose Estimation via Reachability Analysis'), T('15:00–15:15','Tensor Probabilistic Model Checking of Finite-Horizon Markov Chains'), T('15:15–15:30','Fast Computation of Conditional Probabilities in MDPs and Markov Chain Families'), T('15:30–15:40','Ensuring Safety in Automotive Machine Learning Inference'), T('15:40–15:50','Caesar: A Deductive Verifier for Probabilistic Programs'), T('15:50–16:00','ULTIMATE: A Tool for the Verification and Synthesis of Stochastic World Models')]), S(H(16,0),H(16,30),'sb','Coffee Break','Grande Auditório'), S(H(16,30),H(17,30),'ss','CAV/AWS Happy Hour','Giro\'Giro'), ], ], // end cav //
+
+// ════════════════════════════════════════════════════════════════════ IJCAR ══
+ijcar:[
+/* 0 Sun 26 */[
+  S(H(8,45),H(10,0),'sk','Keynote: The Lean Theorem Prover — Design, Evolution, and Impact','Grande Auditório',[
+    T('08:45–10:00','Leonardo de Moura (Microsoft Research)')]),
+  S(H(10,0),H(11,0),'sb','Coffee Break','B2.04'),
+  S(H(11,0),H(12,0),'sp','Proof Theory and Hybrid Systems','B2.04',[
+    T('11:00–11:20','A Deductive Refinement Calculus for Differential-Algebraic Programs'),
+    T('11:20–11:40','Refactoring-as-Propositions: Towards a Unified Framework'),
+    T('11:40–12:00','Complete Robust Hybrid Systems Reachability via Constraint Solving')]),
+  S(H(12,0),H(14,0),'sb','Lunch','B2.04'),
+  S(H(14,0),H(14,40),'sp','Arrays & Interpolation','B2.04',[
+    T('14:00–14:20','Accelerating Loops with Arrays via Symbolic Execution'),
+    T('14:20–14:40','Saving Craig in the Fluted Fragment')]),
+  S(H(14,40),H(16,0),'sa','Awards Ceremony','B2.04',[
+    T('14:40–14:50','Best Paper Award'),
+    T('14:50–15:00','Best Student Paper Award'),
+    T('15:00–15:10','Bill McCune PhD Award'),
+    T('15:10–15:50','Herbrand Award — Acceptance Speech'),
+    T('15:50–16:00','Presentation of the Herbrand Award')]),
+  S(H(16,0),H(16,30),'sb','Coffee Break','B2.04'),
+  S(H(18,0),H(20,0),'ss','Welcome Reception','Pátio da Galé'),
+],
+/* 1 Mon 27 */[
+  S(H(9,0),H(10,0),'si','Invited Talk: A Type-Theoretic Framework for Meta-Programming','B2.04',[
+    T('09:00–10:00','Brigitte Pientka (McGill University)')]),
+  S(H(10,0),H(11,0),'sb','Coffee Break + Live Competitions Kickoff','B2.04',[
+    T('10:00–10:30','CADE ATP System Competition (CASC) — Kickoff'),
+    T('10:30–11:00','ProoVer 2026 Competition — Kickoff')]),
+  S(H(11,0),H(12,0),'sp','Automation & Unification','B2.04',[
+    T('11:00–11:20','Unification of Deterministic Higher-Order Patterns'),
+    T('11:20–11:40','Automating Proof Search when Equality is a Logical Connective'),
+    T('11:40–11:50','SMT-Based Deontic Reasoning for Åqvist Logics (Short)'),
+    T('11:50–12:00','grind: An SMT-Inspired Tactic for Lean 4 (Short)')]),
+  S(H(12,0),H(14,0),'sb','Lunch','B2.04'),
+  S(H(14,0),H(16,0),'sp','Formalization & Interactive Proof','B2.04',[
+    T('14:00–14:20','A Unified Formalization of Context-Free Grammar Theory'),
+    T('14:20–14:40','Towards Term-based Verification of Diagrammatic Equivalence'),
+    T('14:40–15:00','Pitts and Intuitionistic Multi-Succedent Calculi'),
+    T('15:00–15:20','Formally Verified Graph Generation with SAT modulo Symmetries and Lean'),
+    T('15:20–15:40','Semantics for Dependently-Typed Higher-Order Logic'),
+    T('15:40–16:00','Growing HOLMS: A Verified Automated Prover for Grzegorczyk Logic in HOL Light')]),
+  S(H(16,0),H(16,30),'sb','Coffee Break','B2.04'),
+  S(H(16,30),H(18,30),'sp','Rewriting, Automata, Verification & Fuzzy Logic','B2.04',[
+    T('16:30–16:50','Disproving (Positive) Almost-Sure Termination via Probabilistic Term Rewriting'),
+    T('16:50–17:10','Complexity and Expressivity of the Uniform Fluted Fragment'),
+    T('17:10–17:30','Complexity of Reasoning in Kleene Algebra'),
+    T('17:30–17:50','Learning Computation Tree Logic with Neural Networks'),
+    T('17:50–18:10','Toward Fast Automatic Verification of Textbook Proof Steps'),
+    T('18:10–18:20','Implementing Fuzzy OSF Logic Unification and Normalization (Short)'),
+    T('18:20–18:30','Termination Competition Results')]),
+  S(H(20,0),H(21,30),'ss','IJCAR Business Meeting','B2.04'),
+],
+/* 2 Tue 28 */[
+  S(H(8,45),H(10,0),'sk','Keynote: Trustworthy Neuro-Symbolic Programming with Informal Specifications','Grande Auditório',[
+    T('08:45–10:00','Işıl Dillig (UT Austin)')]),
+  S(H(10,0),H(11,0),'sb','Coffee Break','B2.04'),
+  S(H(11,0),H(12,20),'sp','Model Finding, Certification & Synthesis','B2.04',[
+    T('11:00–11:20','Finite Model Finding for First-Order Modal Logics'),
+    T('11:20–11:40','On the Completeness of Synthesis Under Realizability Assumptions'),
+    T('11:40–12:00','Hardware Model Checking Certification'),
+    T('12:00–12:20','Generating Tableau-Based Provers from Logical Specifications')]),
+  S(H(12,20),H(14,0),'sb','Lunch','B2.04'),
+  S(H(14,0),H(16,0),'sp','Superposition, Saturation, Equations & Constraints','B2.04',[
+    T('14:00–14:20','Parametric Solutions for Theory-Agnostic Encodings in Superposition'),
+    T('14:20–14:40','Generating Human-Readable Proof Structure via Saturation'),
+    T('14:40–15:00','Theory-Agnostic Encodings for Superposition with Ordering Constraints'),
+    T('15:00–15:20','Superposition for Separation Logic'),
+    T('15:20–15:40','Twitch: Learning Abstractions for Equational Theorem Proving'),
+    T('15:40–16:00',"Tao's Equational Proof Challenge Accepted")]),
+  S(H(16,0),H(16,30),'sb','Coffee Break','B2.04'),
+  S(H(16,30),H(17,0),'sp','Confluence Analysis & Rewriting','B2.04',[
+    T('16:30–16:50','An Applicative Multiset Path Order'),
+    T('16:50–17:00','The ARI Infrastructure for Automated Confluence Analysis (Short)')]),
+  S(H(17,0),H(17,30),'sx','Deepak Kapur Memorial Session','B2.04'),
+  S(H(19,0),H(23,0),'ss','Conference Banquet','Pavilhão Carlos Lopes'),
+],
+/* 3 Wed 29 */[
+  S(H(9,0),H(10,0),'si','Invited Talk: Polynomial-time Deduction with Orthologic','B2.04',[
+    T('09:00–10:00','Viktor Kunčak (EPFL)')]),
+  S(H(10,0),H(11,0),'sb','Coffee Break','B2.04'),
+  S(H(11,0),H(12,0),'sp','SMT Proof Production & Checking','B2.04',[
+    T('11:00–11:20','A General Approach for SMT Proof Skeletons'),
+    T('11:20–11:40','Automatically Translating Proof Systems for SMT Solvers to the λΠ-calculus'),
+    T('11:40–11:50','Checking Regular Expressions in cvc5 Proofs (Short)'),
+    T('11:50–12:00','Ethos: A Fast Proof Checker for the Eunoia Logical Framework (Short)')]),
+  S(H(12,0),H(13,30),'sb','Lunch','B2.04'),
+  S(H(13,30),H(15,30),'sp','Theory Combination, Arithmetic Circuits & Embedded Systems','B2.04',[
+    T('13:30–13:50','The Termination of Nielsen Transformations Applied to Word Equations with Length Constraints'),
+    T('13:50–14:10','Bringing Closure to Theory Combination Properties'),
+    T('14:10–14:30','Free Set Theory — Cut Elimination and Consistency'),
+    T('14:30–14:50','Avoiding Big Integers: Parallel Multimodular Algebraic Verification of Arithmetic Circuits'),
+    T('14:50–15:10','A Two-Watched Literal Scheme for First-Order Logic'),
+    T('15:10–15:30','Verification of Configurable SRA Systems')]),
+  S(H(15,30),H(16,0),'sb','Coffee Break','B2.04'),
+  S(H(16,0),H(18,0),'sp','Refined Logics & Proofs, Hyperproperties & Synthesis','B2.04',[
+    T('16:00–16:20','Proof Nets for PiL'),
+    T('16:20–16:40','Ordered Adjoint Logic'),
+    T('16:40–17:00','A Complete Proof System for HyperLTL'),
+    T('17:00–17:20','Automatic Abstraction Refinement for Hyperproperties Verification'),
+    T('17:20–17:40','Uniform Interpolation with Constructive Diamond'),
+    T('17:40–18:00','Program Synthesis for Non-Linear Real Arithmetic: Beyond Realizable Specifications')]),
+],
+], // end ijcar
+
+}; // end DATA
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Utilities
+// ─────────────────────────────────────────────────────────────────────────────
+const p2  = n => String(n).padStart(2,'0');
+const toMin = hm => hm[0]*60+hm[1];
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function lisbonNow(){
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Europe/Lisbon',hour12:false,
+    year:'numeric',month:'numeric',day:'numeric',
+    hour:'numeric',minute:'numeric'
+  });
+  const p = Object.fromEntries(fmt.formatToParts(now).map(x=>[x.type,x.value]));
+  let h = parseInt(p.hour,10);
+  if(h===24)h=0;
+  return{Y:parseInt(p.year,10),M:parseInt(p.month,10),D:parseInt(p.day,10),
+         h,m:parseInt(p.minute,10)};
+}
+
+function dayIdx(lt){
+  for(let i=0;i<DATES.length;i++){
+    if(lt.Y===DATES[i][0]&&lt.M===DATES[i][1]&&lt.D===DATES[i][2])return i;
+  }
+  return -1;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Render
+// ─────────────────────────────────────────────────────────────────────────────
+let curDay = 0;
+
+function render(){
+  const lt      = lisbonNow();
+  const todayI  = dayIdx(lt);
+  const nowMin  = lt.h*60+lt.m;
+
+  document.getElementById('clk').textContent = `${p2(lt.h)}:${p2(lt.m)}`;
+
+  for(const conf of ['itp','cav','ijcar']){
+    const sessions = DATA[conf][curDay];
+    const isToday  = todayI === curDay;
+    let html = '';
+
+    for(let i=0;i<sessions.length;i++){
+      const ses = sessions[i];
+      const sm = toMin(ses.s), em = toMin(ses.e);
+      const active = isToday && nowMin>=sm && nowMin<em;
+      const past   = isToday && nowMin>=em;
+
+      const ts    = `${p2(ses.s[0])}:${p2(ses.s[1])} – ${p2(ses.e[0])}:${p2(ses.e[1])}`;
+      const badge = active ? '<span class="pill">NOW</span>' : '';
+      const rm    = ses.rm ? `<div class="s-rm">📍 ${esc(ses.rm)}</div>` : '';
+
+      let talks = '';
+      if(ses.talks.length){
+        talks = '<div class="s-talks">'
+          + ses.talks.map(t=>
+              `<div class="talk"><span class="talk-t">${esc(t.t)}</span>${esc(t.n)}</div>`
+            ).join('')
+          + '</div>';
+      }
+
+      let ndLink = '';
+      if(ses.c==='sn'){
+        const url=`https://program.floc26.org/${conf.toUpperCase()}-index`;
+        ndLink=`<div class="nodata-link">
+          <a href="${url}" target="_blank" rel="noopener">View full schedule at floc26.org ↗</a>
+        </div>`;
+      }
+
+      html += `<div class="s ${ses.c}${active?' now':''}${past?' past':''}">
+        <div class="s-hd">
+          <div class="s-tm">${ts}</div>
+          <div class="s-ti">${esc(ses.ti)}${badge}</div>${rm}
+        </div>${talks}${ndLink}
+      </div>`;
+    }
+    document.getElementById(`b-${conf}`).innerHTML = html;
+  }
+
+  // Tab active state
+  document.querySelectorAll('.tab').forEach(b=>{
+    b.classList.toggle('on', +b.dataset.d===curDay);
+  });
+
+  // Pin column headers just below the sticky banner
+  const bh = document.getElementById('banner').getBoundingClientRect().height;
+  document.querySelectorAll('.col-head').forEach(h=>{ h.style.top = bh+'px'; });
+}
+
+function setDay(d){
+  curDay=d;
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function jumpNow(){
+  const ti = dayIdx(lisbonNow());
+  if(ti<0){alert('The conference is not running today.');return;}
+  curDay=ti;
+  render();
+  setTimeout(()=>{
+    const el=document.querySelector('.s.now');
+    if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+  },60);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+const bootDay = dayIdx(lisbonNow());
+curDay = bootDay >= 0 ? bootDay : 0;
+render();
+setInterval(render, 30000); // refresh every 30 s
+</script>
+</body>
+</html>
