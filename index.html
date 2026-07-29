@@ -37,7 +37,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;
 
 
 /* ── Three columns ─────────────────────────────────────────────────── */
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr}
+/* .grid{display:grid;grid-template-columns:1fr 1fr 1fr}
 .col{border-right:1px solid #21262d}
 .col:last-child{border-right:none}
 .col-head{padding:.55rem 1rem;text-align:center;font-weight:700;
@@ -46,10 +46,44 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;
 .ci .col-head{color:#58a6ff;border-color:#1f6feb;background:#0d1117}
 .cc .col-head{color:#ffa657;border-color:#bd561d;background:#0d1117}
 .cj .col-head{color:#56d364;border-color:#238636;background:#0d1117}
+.col-body{padding:.4rem} */
+
+/* NEW */
+/* ── Header row (3 columns) ────────────────────────────────────────── */
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr}
+.col{border-right:1px solid #21262d}
+.col:last-child{border-right:none}
+
+/* ── Time-aligned schedule grid ────────────────────────────────────── */
+.sched-grid{display:grid;grid-template-columns:1fr 1fr 1fr;
+            column-gap:0;row-gap:.35rem;position:relative}
+/* continuous vertical dividers, independent of gaps between cards */
+.sched-grid::before,.sched-grid::after{content:"";position:absolute;
+            top:0;bottom:0;width:1px;background:#21262d;pointer-events:none}
+.sched-grid::before{left:33.333%}
+.sched-grid::after {left:66.667%}
+.col-head{padding:.55rem 1rem;text-align:center;font-weight:700;
+          font-size:.9rem;letter-spacing:.04em;border-bottom:2px solid;
+          position:sticky;z-index:50}
+.ci .col-head{color:#58a6ff;border-color:#1f6feb;background:#0d1117}
+.cc .col-head{color:#ffa657;border-color:#bd561d;background:#0d1117}
+.cj .col-head{color:#56d364;border-color:#238636;background:#0d1117}
 .col-body{padding:.4rem}
+/* dark theme — matches nested OR same-element class */
+/* .ci .col-head, .col-head.ci{color:#58a6ff;border-color:#1f6feb;background:#0d1117}
+.cc .col-head, .col-head.cc{color:#ffa657;border-color:#bd561d;background:#0d1117}
+.cj .col-head, .col-head.cj{color:#56d364;border-color:#238636;background:#0d1117} */
+
+html[data-theme="light"] .sched-grid::before,
+html[data-theme="light"] .sched-grid::after{background:#d0d7de}
+
 
 /* ── Session cards ─────────────────────────────────────────────────── */
-.s{border-radius:5px;border:1px solid transparent;margin-bottom:.35rem;
+/* .s{border-radius:5px;border:1px solid transparent;margin-bottom:.35rem; */
+   /* overflow:hidden;transition:opacity .25s,border-color .25s,box-shadow .25s} */
+
+/* NEW */
+.s{border-radius:5px;border:1px solid transparent;margin:0 .4rem;
    overflow:hidden;transition:opacity .25s,border-color .25s,box-shadow .25s}
 .s-hd{padding:.5rem .65rem}
 .s-tm{font-family:monospace;font-size:.67rem;color:#484f58;margin-bottom:.12rem}
@@ -255,7 +289,7 @@ html[data-theme="light"] .nodata-link a{color:#218bff}
   </div>
 </div>
 
-<div class="grid">
+<!-- <div class="grid">
   <div class="col ci">
     <div class="col-head">ITP</div>
     <div class="col-body" id="b-itp"></div>
@@ -268,7 +302,13 @@ html[data-theme="light"] .nodata-link a{color:#218bff}
     <div class="col-head">IJCAR</div>
     <div class="col-body" id="b-ijcar"></div>
   </div>
+</div> -->
+<div class="grid">
+  <div class="col ci"><div class="col-head">ITP</div></div>
+  <div class="col cc"><div class="col-head">CAV</div></div>
+  <div class="col cj"><div class="col-head">IJCAR</div></div>
 </div>
+<div class="sched-grid" id="sched"></div>
 
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
@@ -520,19 +560,27 @@ function dayIdx(lt){
 let curDay = 0;
 
 function render(){
-  const lt      = lisbonNow();
-  const todayI  = dayIdx(lt);
-  const nowMin  = lt.h*60+lt.m;
-
+  const lt     = lisbonNow();
+  const todayI = dayIdx(lt);
+  const nowMin = lt.h*60+lt.m;
   document.getElementById('clk').textContent = `${p2(lt.h)}:${p2(lt.m)}`;
 
-  for(const conf of ['itp','cav','ijcar']){
-    const sessions = DATA[conf][curDay];
-    const isToday  = todayI === curDay;
-    let html = '';
+  const confs = [['itp',1],['cav',2],['ijcar',3]];
 
-    for(let i=0;i<sessions.length;i++){
-      const ses = sessions[i];
+  // Shared time axis: union of every start/end across all three columns
+  const bset = new Set();
+  confs.forEach(([c])=>DATA[c][curDay].forEach(s=>{
+    bset.add(toMin(s.s)); bset.add(toMin(s.e));
+  }));
+  const bounds = [...bset].sort((a,b)=>a-b);
+  const line   = {};                 // minute -> grid line number
+  bounds.forEach((v,i)=>line[v]=i+1);
+  const rowCount = Math.max(1, bounds.length-1);
+
+  let html = '';
+  confs.forEach(([conf,col])=>{
+    const isToday = todayI === curDay;
+    DATA[conf][curDay].forEach(ses=>{
       const sm = toMin(ses.s), em = toMin(ses.e);
       const active = isToday && nowMin>=sm && nowMin<em;
       const past   = isToday && nowMin>=em;
@@ -558,25 +606,31 @@ function render(){
         </div>`;
       }
 
-      html += `<div class="s ${ses.c}${active?' now':''}${past?' past':''}">
+      const r1 = line[sm], r2 = line[em];
+      html += `<div class="s ${ses.c}${active?' now':''}${past?' past':''}"
+                    style="grid-column:${col};grid-row:${r1} / ${r2};">
         <div class="s-hd">
           <div class="s-tm">${ts}</div>
           <div class="s-ti">${esc(ses.ti)}${badge}</div>${rm}
         </div>${talks}${ndLink}
       </div>`;
-    }
-    document.getElementById(`b-${conf}`).innerHTML = html;
-  }
+    });
+  });
+
+  const sched = document.getElementById('sched');
+  sched.style.gridTemplateRows = `repeat(${rowCount}, auto)`;
+  sched.innerHTML = html;
 
   // Tab active state
   document.querySelectorAll('.tab').forEach(b=>{
     b.classList.toggle('on', +b.dataset.d===curDay);
   });
 
-  // Pin column headers just below the sticky banner
+  // Pin column headers below the sticky banner
   const bh = document.getElementById('banner').getBoundingClientRect().height;
   document.querySelectorAll('.col-head').forEach(h=>{ h.style.top = bh+'px'; });
 }
+
 
 function setDay(d){
   curDay=d;
